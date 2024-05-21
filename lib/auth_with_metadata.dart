@@ -15,55 +15,53 @@ import 'dart:async';
 import 'package:jellyfin_openapi/api.dart';
 
 class AuthWithMetadata implements Authentication {
-  final String accessToken;
+  final String? accessToken;
   final JellyFinClientData? data;
 
   /// Direct device string instead of building it from JellyFinClientData
   final String? deviceString;
 
   AuthWithMetadata({
-    required this.accessToken,
+    this.accessToken,
     this.data,
     this.deviceString,
   }) {
-    if (data != null && deviceString != null) {
-      throw Exception(
-          'Both data and deviceString cannot be provided, use one or the other');
-    }
+    assert(!(data != null && deviceString != null));
   }
 
-  String addAccessToken() {
-    // if deviceString is given add token to the end
-    return '${deviceString!}, Token=${accessToken}';
-  }
-
-  String _generateAuthString() {
+  String generateAuthString() {
     // 'MediaBrowser Client="$appName Client", Device="${devInfo[0]}", DeviceId=${devInfo[1]}, Version="$appInfo"';
-    if (deviceString != null){
-      return addAccessToken();
-    }
+    final result = <String>[];
 
-    String finalString = 'MediaBrowser Token=${accessToken}, ';
+    if (accessToken != null) {
+      result.add('Token="$accessToken"');
+    }
 
     if (data != null) {
-      if (data?.client != null) {
-        finalString += 'Client=${data!.client!}, ';
-      } else if (data?.deviceId != null) {
-        finalString += 'DeviceId=${data!.deviceId!}, ';
-      } else if (data?.version != null) {
-        finalString += 'Version=${data!.version!}, ';
-      } else if (data?.device != null) {
-        finalString += 'Device=${data!.device!}';
+      if (data!.client != null) {
+        result.add('Client="${data!.client!}"');
+      }
+      if (data!.deviceId != null) {
+        result.add('DeviceId="${data!.deviceId!}"');
+      }
+
+      if (data!.version != null) {
+        result.add('Version="${data!.version!}"');
+      }
+
+      if (data!.device != null) {
+        result.add('Device="${data!.device!}"');
       }
     }
 
-    return finalString;
+    final res = 'MediaBrowser ${result.join(', ')}';
+    return res;
   }
 
   @override
   Future<void> applyToParams(
       List<QueryParam> queryParams, Map<String, String> headerParams) async {
-    headerParams['Authorization'] = _generateAuthString();
+    headerParams['Authorization'] = generateAuthString();
   }
 }
 
