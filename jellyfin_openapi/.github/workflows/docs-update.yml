@@ -1,0 +1,38 @@
+name: Commit updated docs to docusaurus repo
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+#  commit-to-another-repo:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout source repo
+#        uses: actions/checkout@v2
+#        with:
+#          path: src
+#
+#      - name: Checkout target repo
+#        uses: actions/checkout@v2
+#        with:
+#          repository: RA341/jellydart-docs
+#          token: ${{ secrets.ACCESS_TOKEN }}
+#          path: dest
+#
+#      - name: Copy files from source to target
+#        run: |
+#          cp -r src/jellydart/README.md dest/pages/autogen/README.md
+#          cp -r src/jellydart/doc/* dest/pages/autogen/doc/
+#          cp -r src/custom_docs/* dest/pages/customdocs/
+#
+#      - name: Commit changes to target repo
+#        run: |
+#          cd dest
+#          git config user.email "${{ secrets.EMAIL }}"
+#          git config user.name "Docs-bot"
+#          git add .
+#          git commit -m "Updated docs from SDK repo"
+#          git push

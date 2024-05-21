@@ -13,10 +13,7 @@ dependencies:
     sdk: flutter
 
   jellyfin_openapi:
-    git:
-      url: https://github.com/RA341/jellydart.git
-      ref: main
-      path: jellyfin_oapi
+    path: ./jellyfin_openapi/jellyfin_oapi
 
 dev_dependencies:
   flutter_test:
