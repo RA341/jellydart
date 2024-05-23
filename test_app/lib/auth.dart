@@ -1,12 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:jellydart/jellydart.dart';
 
-import 'package:http/http.dart' as http;
-import 'package:jellydart/get_url_api.dart';
-import 'package:jellyfin_openapi/api.dart';
-
-Future<void> main() async {
+Future<(ApiClient, String)> login() async {
   final clientData = JellyFinClientData(
     client: 'Testing',
     version: 'testver',
@@ -37,21 +31,6 @@ Future<void> main() async {
     data: clientData,
   );
 
-  defaultApiClient = ApiClient(basePath: url, authentication: auth);
-  final userId = user.user!.id!;
+  return (ApiClient(basePath: url, authentication: auth), user.user!.id!);
 
-  final items = await ItemsApi().getResumeItems(userId);
-  if (items == null || items.items == null || items.items!.isEmpty) {
-    throw Exception('Could not find any resume items');
-  }
-
-  final id = items.items!.first.id!;
-
-
-  final imagUrl = Uri.parse('$url/Items/$id/Images/Primary');
-
-
-  final testurl = Uri.parse('$url/Videos/$id/stream');
-
-  final funUrl = GetUrlApi().getVideoStreamUrl(id);
 }

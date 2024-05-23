@@ -1,20 +1,134 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:jellydart/jellydart.dart';
+import 'package:jellydart/get_url_api.dart';
 
-import 'src/app.dart';
-import 'src/settings/settings_controller.dart';
-import 'src/settings/settings_service.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
+import 'package:test_app/auth.dart';
 
 void main() async {
-  // Set up the SettingsController, which will glue user settings to multiple
-  // Flutter Widgets.
-  final settingsController = SettingsController(SettingsService());
+  WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
 
-  // Load the user's preferred theme while the splash screen is displayed.
-  // This prevents a sudden theme change when the app is first displayed.
-  await settingsController.loadSettings();
+  runApp(const MyApp());
+}
 
-  // Run the app and pass in the SettingsController. The app listens to the
-  // SettingsController for changes, then passes it further down to the
-  // SettingsView.
-  runApp(MyApp(settingsController: settingsController));
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: ImageTest(),
+    );
+  }
+}
+
+class ImageTest extends StatefulWidget {
+  const ImageTest({super.key});
+
+  @override
+  State<ImageTest> createState() => _ImageTestState();
+}
+
+class _ImageTestState extends State<ImageTest> {
+  String? url;
+  Map<String, String>? headers;
+
+  @override
+  void initState() {
+    login().then((value) {
+      final client = value.$1;
+      final api = GetUrlApi(client: client);
+      final url = api.getItemImageUrl(
+        '43257459bbf95c10e689c22c4cb5819d',
+        ImageType.primary,
+      );
+      this.url = url;
+      headers = api.headers;
+      setState(() {});
+    });
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return url == null
+        ? const CircularProgressIndicator()
+        : CachedNetworkImage(
+            imageUrl: url!,
+            httpHeaders: headers!,
+            errorWidget: (context, url, error) =>
+                const Text('Failed to get data'),
+          );
+  }
+}
+
+class VideoTest extends StatefulWidget {
+  const VideoTest({super.key});
+
+  @override
+  State<VideoTest> createState() => _VideoTestState();
+}
+
+class _VideoTestState extends State<VideoTest> {
+  late final player = Player();
+
+  // Create a [VideoController] to handle video output from [Player].
+  late final controller = VideoController(player);
+
+  @override
+  void initState() {
+    login().then((value) {
+      final client = value.$1;
+      final userId = value.$2;
+
+      ItemsApi(client).getResumeItems(userId).then(
+        (items) {
+          if (items == null || items.items == null || items.items!.isEmpty) {
+            throw Exception('Could not find any resume items');
+          }
+
+          final id = items.items!.first.id!;
+
+          // Play a [Media] or [Playlist]
+          final urlClient = GetUrlApi(client: client);
+          final url = urlClient.getVideoStreamUrl(id);
+          player.open(Media(url, httpHeaders: urlClient.headers));
+
+          player.stream.track.listen(
+            (event) {
+              print(event.video);
+            },
+          );
+
+          player.stream.tracks.listen(
+            (event) {
+              print(event);
+            },
+          );
+        },
+      );
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    player.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.width * 9.0 / 16.0,
+        // Use [Video] widget to display video output.
+        child: Video(controller: controller),
+      ),
+    );
+  }
 }
