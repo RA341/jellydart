@@ -11,7 +11,8 @@ class GetUrlApi {
     headers = tmp;
   }
 
-  String getVideoStreamUrl(String itemId, {
+  String getVideoStreamUrl(
+    String itemId, {
     String? container,
     Map<String, String>? queryParams,
     Map<String, String>? headers,
@@ -24,6 +25,29 @@ class GetUrlApi {
     } else {
       path = '/Videos/$itemId/stream.$container';
     }
+
+    final uri = Uri.parse(client.basePath).replace(
+      path: path,
+      queryParameters: queryParams,
+    );
+
+    return uri.toString();
+  }
+
+  Future<String> getHlsUrl(
+    String itemId,
+    String userId, {
+    String? container,
+    Map<String, String>? queryParams,
+  }) async {
+
+    queryParams = {};
+    final path = '/Videos/$itemId/master.m3u8';
+
+    final mediaINfo =
+        await MediaInfoApi(client).getPlaybackInfo(itemId, userId);
+
+    queryParams.addAll({'mediaSourceId': mediaINfo!.mediaSources.first.id!});
 
     final uri = Uri.parse(client.basePath).replace(
       path: path,
@@ -93,26 +117,27 @@ class GetUrlApi {
   ///
   /// * [int] imageIndex:
   ///   Image index.
-  String getItemImageUrl(String itemId,
-      ImageType imageType, {
-        int? maxWidth,
-        int? maxHeight,
-        int? width,
-        int? height,
-        int? quality,
-        int? fillWidth,
-        int? fillHeight,
-        String? tag,
-        bool? cropWhitespace,
-        ImageFormat? format,
-        bool? addPlayedIndicator,
-        double? percentPlayed,
-        int? unplayedCount,
-        int? blur,
-        String? backgroundColor,
-        String? foregroundLayer,
-        int? imageIndex,
-      }) {
+  String getItemImageUrl(
+    String itemId,
+    ImageType imageType, {
+    int? maxWidth,
+    int? maxHeight,
+    int? width,
+    int? height,
+    int? quality,
+    int? fillWidth,
+    int? fillHeight,
+    String? tag,
+    bool? cropWhitespace,
+    ImageFormat? format,
+    bool? addPlayedIndicator,
+    double? percentPlayed,
+    int? unplayedCount,
+    int? blur,
+    String? backgroundColor,
+    String? foregroundLayer,
+    int? imageIndex,
+  }) {
     final path = '/Items/$itemId/Images/$imageType';
 
     final queryParams = <String, String>{};
@@ -139,7 +164,6 @@ class GetUrlApi {
       queryParams['foregroundLayer'] = foregroundLayer;
     if (imageIndex != null) queryParams['imageIndex'] = '$imageIndex';
 
-
     final uri = Uri.parse(client.basePath).replace(
       path: path,
       queryParameters: queryParams.isNotEmpty ? queryParams : null,
@@ -148,22 +172,7 @@ class GetUrlApi {
     return uri.toString();
   }
 
-  Future<String> streamVideos(String itemId, String userId, {
-    String? container,
-    Map<String, String>? queryParams,
-  }) async {
-    queryParams = {};
-    final path = '/Videos/$itemId/master.m3u8';
-
-    final mediaINfo = await MediaInfoApi(client).getPlaybackInfo(itemId, userId);
-    
-    queryParams.addAll({'mediaSourceId': mediaINfo!.mediaSources.first.id!});
-    
-    final uri = Uri.parse(client.basePath).replace(
-      path: path,
-      queryParameters: queryParams,
-    );
-
-    return uri.toString();
+  void setPlayBackInfo(String itemId, String userId) {
+    MediaInfoApi().getPlaybackInfo(itemId, userId);
   }
 }

@@ -94,18 +94,21 @@ class _VideoTestState extends State<VideoTest> {
 
           // Play a [Media] or [Playlist]
           final urlClient = GetUrlApi(client: client);
-          final url = await urlClient.streamVideos(id, userId);
+          final url = await urlClient.getHlsUrl(id, userId);
           player.open(Media(url, httpHeaders: urlClient.headers));
 
-          player.stream.track.listen(
-            (event) {
-              print(event.video);
-            },
-          );
+          // player.stream.track.listen(
+          //   (event) {
+          //     print(event.video);
+          //   },
+          // );
 
           player.stream.tracks.listen(
             (event) {
-              print(event);
+              print(player.state.tracks.audio);
+              print(player.state.tracks.video);
+              print(player.state.tracks.subtitle);
+
             },
           );
         },
